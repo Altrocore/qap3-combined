@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/stylesheets/style.css">
+  <title>Users Page</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+  <header class="bg-primary text-white text-center p-3">
+    <h1>Manage Users</h1>
+  </header>
+
+  <div class="container mt-4">
+    <h2>List of Users</h2>
+    <ul class="list-group" id="user-list">
+      <% users.forEach(user => { %>
+        <li class="list-group-item" id="user-<%= user.id %>">
+          <%= user.name %> (<%= user.email %>)
+          <button class="btn btn-danger float-right ml-2 delete-button" data-id="<%= user.id %>">Delete</button>
+          <form class="update-form" data-id="<%= user.id %>">
+            <input type="text" class="form-control" name="name" placeholder="New name">
+            <input type="text" class="form-control" name="email" placeholder="New email">
+            <button type="submit" class="btn btn-primary mt-2">Update</button>
+          </form>
+        </li>
+      <% }); %>
+    </ul>
+
+    <h3 class="mt-4">Add a User</h3>
+    <form id="add-user-form">
+      <div class="form-group">
+        <label for="name">Name:</label>
+        <input type="text" class="form-control" id="name" name="name">
+      </div>
+      <div class="form-group">
+        <label for="email">Email:</label>
+        <input type="text" class="form-control" id="email" name="email">
+      </div>
+      <button type="submit" class="btn btn-success">Submit</button>
+    </form>
+  </div>
+
+  <footer class="bg-light text-center py-4 mt-4">
+    <p>Click <a href="/">here</a> to go back to the home page.</p>
+  </footer>
+
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+  <script>
+  $(document).ready(function() {
+    $('#add-user-form').on('submit', function(e) {
+      e.preventDefault();
+      $.ajax({
+        url: '/users',
+        method: 'POST',
+        data: {
+          name: $('#name').val(),
+          email: $('#email').val()
+        },
+        success: function(data) {
+          $('#user-list').append('<li class="list-group-item" id="user-' + data.id + '">' + data.name + ' (' + data.email + ') <button class="btn btn-danger float-right ml-2 delete-button" data-id="' + data.id + '">Delete</button> <form class="update-form" data-id="' + data.id + '"><input type="text" class="form-control" name="name" placeholder="New name"><input type="text" class="form-control" name="email" placeholder="New email"><button type="submit" class="btn btn-primary mt-2">Update</button></form></li>');
+        }
+      });
+    });
+
+    $(document).on('click', '.delete-button', function() {
+      var userId = $(this).data('id');
+      $.ajax({
+        url: '/users/' + userId,
+        method: 'DELETE',
+        success: function() {
+          $('#user-' + userId).remove();
+        }
+      });
+    });
+
+    $(document).on('submit', '.update-form', function(e) {
+      e.preventDefault();
+      var userId = $(this).data('id');
+      $.ajax({
+        url: '/users/' + userId,
+        method: 'PUT',
+        data: {
+          name: $(this).find('input[name="name"]').val(),
+          email: $(this).find('input[name="email"]').val()
+        },
+        success: function(data) {
+          $('#user-' + userId).text(data.name + ' (' + data.email + ')');
+        }
+      });
+    });
+  });
+  </script>
+</body>
+</html>
